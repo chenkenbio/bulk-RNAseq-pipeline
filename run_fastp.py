@@ -11,8 +11,8 @@ import sys
 import numpy as np
 from biock import run_bash, make_logger, get_run_info, make_directory
 
-from rnaseq_tools import (
-    remove_fastq_suffix
+from hts_tools import (
+    remove_fastq_suffix, get_paired_fastq_prefix
 )
 
 
@@ -33,26 +33,44 @@ if __name__ == "__main__":
     logger.info("{}".format(get_run_info(sys.argv, args)))
     args.outdir = make_directory(args.outdir)
 
-    prefix = "{}/{}".format(
-        args.outdir,
-        remove_fastq_suffix(os.path.basename( args.fastq1))
-    )
+    if args.fq2 is None:
+        logger.info("SE mode")
+        prefix = "{}/{}".format(
+            args.outdir,
+            remove_fastq_suffix(os.path.basename(args.fastq1))
+        )
+        template = ' '.join([
+            "fastp", 
+            "-i {fastq1}", 
+            "-o {prefix}.fastp.fq.gz",
+            "--html {prefix}.fastp.html",
+            "--json {prefix}.fastp.json",
+            "-t {threads}",
+            "&> {prefix}.fastp.log"])
+    else:
+        logger.info("PE mode")
+        prefix = get_paired_fastq_prefix(args.fastq1, args.fastq2)
+        template = ' '.join([
+            "fastp", 
+            "-i {fastq1}", "-I {fastq2}",
+            "-o {prefix}.R1.fastp.fq.gz", "-O {prefix}.R2.fastp.fq.gz",
+            "--unpaired1 {prefix}.R1.fastp.unpaired.fq.gz",
+            "--unpaired2 {prefix}.R2.fastp.unpaired.fq.gz",
+            "--html {prefix}.fastp.html",
+            "--json {prefix}.fastp.json",
+            "-t {threads}",
+            "&> {prefix}.fastp.log"])
 
-    template = "fastp -i {fastq1} -o {prefix}.fastp.fq.gz --html {prefix}.fastp.html --json {prefix}.fastp.json -t {threads} &> {prefix}.fastp.log"
     cmd = template.format(
         fastq1=args.fastq1,
         prefix=prefix,
         threads=args.threads
     )
-    logger.info("- {}".format(cmd))
+
+    logger.info("- command: {}".format(cmd))
     
     rc, out, err = run_bash(cmd)
 
-    # rc, out, err = run_bash(cmd.format(
-    #     fastq1=args.fastq1,
-    #     prefix=prefix,
-    #     threads=args.threads
-    # ))
     if rc != 0:
         logger.error("Failed: {}".format(err))
     else:
