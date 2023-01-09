@@ -35,7 +35,7 @@ if __name__ == "__main__":
     else:
         bn = remove_fastq_suffix(args.fastq1, args.fastq2)
         if len(bn) == 0:
-            assert args.run_name is not None, "{} and {} have no common prefix, --run-name should be provided"
+            assert args.run_name is not None, "{} and {} have no common prefix, --run-name should be provided".format(args.fastq1, args.fastq2)
 
     args.outdir = make_directory(args.outdir)
     logger = make_logger(filename="{}/pipeline-fastp.{}.log".format(args.outdir, bn))
@@ -52,6 +52,12 @@ if __name__ == "__main__":
             "--json {prefix}.fastp.json",
             "-t {threads}",
             "&> {prefix}.fastp.log"])
+        cmd = template.format(
+            fastq1=args.fastq1,
+            prefix=prefix,
+            threads=args.threads
+        )
+
     else:
         logger.info("PE mode")
         template = ' '.join([
@@ -64,12 +70,14 @@ if __name__ == "__main__":
             "--json {prefix}.fastp.json",
             "-t {threads}",
             "&> {prefix}.fastp.log"])
+        cmd = template.format(
+            fastq1=args.fastq1,
+            fastq2=args.fastq2,
+            prefix=prefix,
+            threads=args.threads
+        )
 
-    cmd = template.format(
-        fastq1=args.fastq1,
-        prefix=prefix,
-        threads=args.threads
-    )
+
 
     logger.info("- run command: {} ...".format(cmd))
     
