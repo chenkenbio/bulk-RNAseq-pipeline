@@ -19,7 +19,7 @@ from hts_tools import (
 def get_args():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("-fq1", "--fastq1", required=True)
-    p.add_argument("-fq1", "--fastq1", required=False, help="paired end")
+    p.add_argument("-fq2", "--fastq2", required=False, help="paired end")
     p.add_argument("-o", "--outdir", required=True)
     p.add_argument("-t", "--threads", type=int, default=4)
     # p.add_argument('--seed', type=int, default=2020)
