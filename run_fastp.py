@@ -20,6 +20,7 @@ def get_args():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("-fq1", "--fastq1", required=True)
     p.add_argument("-fq2", "--fastq2", required=False, help="paired end")
+    p.add_argument('--run-name', required=False)
     p.add_argument("-o", "--outdir", required=True)
     p.add_argument("-t", "--threads", type=int, default=4)
     # p.add_argument('--seed', type=int, default=2020)
@@ -29,16 +30,20 @@ def get_args():
 if __name__ == "__main__":
     args = get_args().parse_args()
 
-    logger = make_logger()
-    logger.info("{}".format(get_run_info(sys.argv, args)))
-    args.outdir = make_directory(args.outdir)
+    if args.run_name is not None:
+        bn = args.run_name
+    else:
+        bn = remove_fastq_suffix(args.fastq1, args.fastq2)
+        if len(bn) == 0:
+            assert args.run_name is not None, "{} and {} have no common prefix, --run-name should be provided"
 
-    if args.fq2 is None:
+    args.outdir = make_directory(args.outdir)
+    logger = make_logger(filename="{}/pipeline-fastp.{}.log".format(args.outdir, bn))
+    logger.info("{}".format(get_run_info(sys.argv, args)))
+
+    prefix = "{}/{}".format(args.outdir, bn)
+    if args.fastq2 is None:
         logger.info("SE mode")
-        prefix = "{}/{}".format(
-            args.outdir,
-            remove_fastq_suffix(os.path.basename(args.fastq1))
-        )
         template = ' '.join([
             "fastp", 
             "-i {fastq1}", 
@@ -49,7 +54,6 @@ if __name__ == "__main__":
             "&> {prefix}.fastp.log"])
     else:
         logger.info("PE mode")
-        prefix = get_paired_fastq_prefix(args.fastq1, args.fastq2)
         template = ' '.join([
             "fastp", 
             "-i {fastq1}", "-I {fastq2}",
@@ -67,7 +71,7 @@ if __name__ == "__main__":
         threads=args.threads
     )
 
-    logger.info("- command: {}".format(cmd))
+    logger.info("- run command: {} ...".format(cmd))
     
     rc, out, err = run_bash(cmd)
 
