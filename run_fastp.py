@@ -38,7 +38,7 @@ if __name__ == "__main__":
             assert args.run_name is not None, "{} and {} have no common prefix, --run-name should be provided".format(args.fastq1, args.fastq2)
 
     args.outdir = make_directory(args.outdir)
-    logger = make_logger(filename="{}/pipeline-fastp.{}.log".format(args.outdir, bn))
+    logger = make_logger(filename="{}/pipeline.fastp.{}.log".format(args.outdir, bn))
     logger.info("{}".format(get_run_info(sys.argv, args)))
 
     prefix = "{}/{}".format(args.outdir, bn)
