@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "{salmon} quant",
         "-i {index}",
         "-l A",
-        "-1 {fastq1}",
+        "-1 {fastq1}" if args.fastq2 is not None else "-r {fastq1}",
         "-2 {fastq2}" if args.fastq2 is not None else "",
         "-p {threads}",
         "--validateMappings",
